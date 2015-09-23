@@ -8,8 +8,10 @@ namespace TileEngineTut {
     /// </summary>
     public class Game1 : Game {
         private readonly TileMap map = new TileMap();
-        private readonly int squaresAcross = 18;
-        private readonly int squaresDown = 11;
+        private readonly int squaresAcross = 17;
+        private readonly int squaresDown = 37;
+        private int baseOffsetX = -14;
+        private int baseOffsetY = -14;
         private GraphicsDeviceManager graphics;
         private SpriteBatch spriteBatch;
 
@@ -38,7 +40,7 @@ namespace TileEngineTut {
         protected override void LoadContent() {
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
-            Tile.TileSetTexture2D = Content.Load<Texture2D>(@"Textures\TileSets\part2_tileset");
+            Tile.TileSetTexture2D = Content.Load<Texture2D>(@"Textures\TileSets\part3_tileset");
         }
 
         /// <summary>
@@ -63,19 +65,19 @@ namespace TileEngineTut {
             var ks = Keyboard.GetState();
             if (ks.IsKeyDown(Keys.Left)) {
                 Camera.Location.X = MathHelper.Clamp(Camera.Location.X - 2, 0,
-                    (map.MapWidth - squaresAcross) * Tile.TileWidth);
+                    (map.MapWidth - squaresAcross) * Tile.TileStepX);
             }
             if (ks.IsKeyDown(Keys.Right)) {
                 Camera.Location.X = MathHelper.Clamp(Camera.Location.X + 2, 0,
-                    (map.MapWidth - squaresAcross) * Tile.TileWidth);
+                    (map.MapWidth - squaresAcross) * Tile.TileStepX);
             }
             if (ks.IsKeyDown(Keys.Down)) {
                 Camera.Location.Y = MathHelper.Clamp(Camera.Location.Y + 2, 0,
-                    (map.MapWidth - squaresDown) * Tile.TileHeight);
+                    (map.MapWidth - squaresDown) * Tile.TileStepY);
             }
             if (ks.IsKeyDown(Keys.Up)) {
                 Camera.Location.Y = MathHelper.Clamp(Camera.Location.Y - 2, 0,
-                    (map.MapWidth - squaresDown) * Tile.TileHeight);
+                    (map.MapWidth - squaresDown) * Tile.TileStepY);
             }
 
             base.Update(gameTime);
@@ -86,27 +88,28 @@ namespace TileEngineTut {
         /// </summary>
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime) {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+            GraphicsDevice.Clear(Color.Black);
 
             spriteBatch.Begin();
 
-            var firstSquare = new Vector2(Camera.Location.X / 32, Camera.Location.Y / Tile.TileHeight);
+            var firstSquare = new Vector2(Camera.Location.X / Tile.TileStepX, Camera.Location.Y / Tile.TileStepY);
             var firstX = (int) firstSquare.X;
             var firstY = (int) firstSquare.Y;
 
-            var squareOffset = new Vector2(Camera.Location.X % 32, Camera.Location.Y % Tile.TileHeight);
+            var squareOffset = new Vector2(Camera.Location.X % Tile.TileStepX, Camera.Location.Y % Tile.TileStepY);
             var offsetX = (int) squareOffset.X;
             var offsetY = (int) squareOffset.Y;
 
             for (var y = 0; y < squaresDown; y++) {
+                var rowOffset = (firstY + y) % 2 == 1 ? Tile.OddRowXOffset : 0;
                 for (var x = 0; x < squaresAcross; x++) {
                     foreach (var tileID in map.Rows[y + firstY].Columns[x + firstX].BaseTiles) {
                         spriteBatch.Draw(
                             Tile.TileSetTexture2D,
                             new Rectangle(
-                                x * Tile.TileWidth - offsetX,
-                                y * Tile.TileHeight - offsetY,
-                                Tile.TileHeight,
+                                x * Tile.TileStepX - offsetX + rowOffset + baseOffsetX, 
+                                y * Tile.TileStepY - offsetY + baseOffsetY,
+                                Tile.TileWidth,
                                 Tile.TileHeight),
                             Tile.GetSourceRectangle(tileID),
                             Color.White);
