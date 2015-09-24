@@ -3,6 +3,7 @@
 namespace TileEngineTut {
     public class MapCell {
         public List<int> BaseTiles = new List<int>();
+        public List<int> HeightTiles = new List<int>();
 
         public MapCell(int tileID) {
             TileID = tileID;
@@ -20,8 +21,12 @@ namespace TileEngineTut {
             }
         }
 
-        public void AddBaseTile(int TileID) {
-            BaseTiles.Add(TileID);
+        public void AddBaseTile(int tileID) {
+            BaseTiles.Add(tileID);
+        }
+
+        public void AddHeightTile(int tileID) {
+            HeightTiles.Add(tileID);
         }
     }
 }

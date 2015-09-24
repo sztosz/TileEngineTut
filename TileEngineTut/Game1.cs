@@ -10,8 +10,9 @@ namespace TileEngineTut {
         private readonly TileMap map = new TileMap();
         private readonly int squaresAcross = 17;
         private readonly int squaresDown = 37;
-        private int baseOffsetX = -14;
-        private int baseOffsetY = -14;
+        private int baseOffsetX = -32;
+        private int baseOffsetY = -64;
+        private float heightRowDepthMod = 0.0000001f;
         private GraphicsDeviceManager graphics;
         private SpriteBatch spriteBatch;
 
@@ -40,7 +41,7 @@ namespace TileEngineTut {
         protected override void LoadContent() {
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
-            Tile.TileSetTexture2D = Content.Load<Texture2D>(@"Textures\TileSets\part3_tileset");
+            Tile.TileSetTexture2D = Content.Load<Texture2D>(@"Textures\TileSets\part4_tileset");
         }
 
         /// <summary>
@@ -90,7 +91,7 @@ namespace TileEngineTut {
         protected override void Draw(GameTime gameTime) {
             GraphicsDevice.Clear(Color.Black);
 
-            spriteBatch.Begin();
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend);
 
             var firstSquare = new Vector2(Camera.Location.X / Tile.TileStepX, Camera.Location.Y / Tile.TileStepY);
             var firstX = (int) firstSquare.X;
@@ -100,10 +101,15 @@ namespace TileEngineTut {
             var offsetX = (int) squareOffset.X;
             var offsetY = (int) squareOffset.Y;
 
+            var maxDepth = ((map.MapWidth + 1) * (map.MapHeight + 1) * Tile.TileWidth) / 10;
+
             for (var y = 0; y < squaresDown; y++) {
                 var rowOffset = (firstY + y) % 2 == 1 ? Tile.OddRowXOffset : 0;
                 for (var x = 0; x < squaresAcross; x++) {
-                    foreach (var tileID in map.Rows[y + firstY].Columns[x + firstX].BaseTiles) {
+                    var mapx = firstX + x;
+                    var mapy = firstY + y;
+                    var depthOffset = 0.7f - ((float)(mapx + (mapy * Tile.TileWidth)) / maxDepth);
+                    foreach (var tileID in map.Rows[mapy].Columns[mapx].BaseTiles) {
                         spriteBatch.Draw(
                             Tile.TileSetTexture2D,
                             new Rectangle(
@@ -112,7 +118,30 @@ namespace TileEngineTut {
                                 Tile.TileWidth,
                                 Tile.TileHeight),
                             Tile.GetSourceRectangle(tileID),
-                            Color.White);
+                            Color.White,
+                            0.0f,
+                            Vector2.Zero, 
+                            SpriteEffects.None, 
+                            1.0f);
+                    }
+
+                    var heightRow = 0;
+
+                    foreach (var tileID in map.Rows[mapy].Columns[mapx].HeightTiles) {
+                        spriteBatch.Draw(
+                            Tile.TileSetTexture2D,
+                            new Rectangle(
+                                x * Tile.TileStepX - offsetX + rowOffset + baseOffsetX, 
+                                y * Tile.TileStepY - offsetY + baseOffsetY - (heightRow * Tile.HeightTileOffset),
+                                Tile.TileWidth,
+                                Tile.TileHeight),
+                            Tile.GetSourceRectangle(tileID),
+                            Color.White,
+                            0.0f,
+                            Vector2.Zero, 
+                            SpriteEffects.None, 
+                            depthOffset - (heightRow * heightRowDepthMod));
+                        heightRow++;
                     }
                 }
             }
