@@ -13,8 +13,10 @@ namespace TileEngineTut {
         private int baseOffsetX = -32;
         private int baseOffsetY = -64;
         private float heightRowDepthMod = 0.0000001f;
+        private SpriteFont pericles6SpriteFont; // it's actualy calibri
         private GraphicsDeviceManager graphics;
         private SpriteBatch spriteBatch;
+        private bool drawCoords = false;
 
 
         public Game1() {
@@ -42,6 +44,7 @@ namespace TileEngineTut {
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
             Tile.TileSetTexture2D = Content.Load<Texture2D>(@"Textures\TileSets\part4_tileset");
+            pericles6SpriteFont = Content.Load<SpriteFont>(@"Fonts\pericles6");
         }
 
         /// <summary>
@@ -80,6 +83,9 @@ namespace TileEngineTut {
                 Camera.Location.Y = MathHelper.Clamp(Camera.Location.Y - 2, 0,
                     (map.MapWidth - squaresDown) * Tile.TileStepY);
             }
+            if (ks.IsKeyDown(Keys.Tab)) {
+                drawCoords = !drawCoords;
+            }
 
             base.Update(gameTime);
         }
@@ -108,40 +114,71 @@ namespace TileEngineTut {
                 for (var x = 0; x < squaresAcross; x++) {
                     var mapx = firstX + x;
                     var mapy = firstY + y;
-                    var depthOffset = 0.7f - ((float)(mapx + (mapy * Tile.TileWidth)) / maxDepth);
-                    foreach (var tileID in map.Rows[mapy].Columns[mapx].BaseTiles) {
+                    var depthOffset = 0.7f - ((float) (mapx + (mapy * Tile.TileWidth)) / maxDepth);
+                    foreach (var tile in map.Rows[mapy].Columns[mapx].BaseTiles) {
                         spriteBatch.Draw(
                             Tile.TileSetTexture2D,
                             new Rectangle(
-                                x * Tile.TileStepX - offsetX + rowOffset + baseOffsetX, 
+                                x * Tile.TileStepX - offsetX + rowOffset + baseOffsetX,
                                 y * Tile.TileStepY - offsetY + baseOffsetY,
                                 Tile.TileWidth,
                                 Tile.TileHeight),
-                            Tile.GetSourceRectangle(tileID),
+                            Tile.GetSourceRectangle(tile),
                             Color.White,
                             0.0f,
-                            Vector2.Zero, 
-                            SpriteEffects.None, 
+                            Vector2.Zero,
+                            SpriteEffects.None,
                             1.0f);
                     }
 
                     var heightRow = 0;
 
-                    foreach (var tileID in map.Rows[mapy].Columns[mapx].HeightTiles) {
+                    foreach (var tile in map.Rows[mapy].Columns[mapx].HeightTiles) {
                         spriteBatch.Draw(
                             Tile.TileSetTexture2D,
                             new Rectangle(
-                                x * Tile.TileStepX - offsetX + rowOffset + baseOffsetX, 
+                                x * Tile.TileStepX - offsetX + rowOffset + baseOffsetX,
                                 y * Tile.TileStepY - offsetY + baseOffsetY - (heightRow * Tile.HeightTileOffset),
                                 Tile.TileWidth,
                                 Tile.TileHeight),
-                            Tile.GetSourceRectangle(tileID),
+                            Tile.GetSourceRectangle(tile),
                             Color.White,
                             0.0f,
-                            Vector2.Zero, 
-                            SpriteEffects.None, 
+                            Vector2.Zero,
+                            SpriteEffects.None,
                             depthOffset - (heightRow * heightRowDepthMod));
                         heightRow++;
+                    }
+
+                    foreach (var tile in map.Rows[mapy].Columns[mapx].TopperTiles) {
+                        spriteBatch.Draw(
+                            Tile.TileSetTexture2D,
+                            new Rectangle(
+                                x * Tile.TileStepX - offsetX + rowOffset + baseOffsetX,
+                                y * Tile.TileStepY - offsetY + baseOffsetY - (heightRow * Tile.HeightTileOffset),
+                                Tile.TileWidth,
+                                Tile.TileHeight),
+                            Tile.GetSourceRectangle(tile),
+                            Color.White,
+                            0.0f,
+                            Vector2.Zero,
+                            SpriteEffects.None,
+                            depthOffset - heightRow * heightRowDepthMod);
+                    }
+
+                    if (drawCoords) {
+                        spriteBatch.DrawString(
+                            pericles6SpriteFont,
+                            mapx.ToString() + ", " + mapy.ToString(),
+                            new Vector2(
+                                x * Tile.TileStepX - offsetX + rowOffset + baseOffsetX + 24,
+                                y * Tile.TileStepY - offsetY + baseOffsetY + 48),
+                            Color.White,
+                            0.0f,
+                            Vector2.Zero,
+                            1.0f,
+                            SpriteEffects.None,
+                            0.0f);
                     }
                 }
             }
